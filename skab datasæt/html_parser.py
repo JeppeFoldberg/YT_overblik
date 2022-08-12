@@ -27,31 +27,22 @@ def parse_html(path):
 
     return soup
 
-def is_an_ad(tag): 
-    '''filter to find ads so they can be removed!'''
-    all_strings = str(tag.string)
-    print(all_strings)
-    match = re.search('From Google Ads', all_strings)
+def is_a_video(tag): 
+    '''
+    Filter to remove ads
+    takes a block of html code and returns a boolean with whether this is an ad or not
+    '''
+    return not(bool(re.search('From Google Ads', tag.get_text())))
     
-    if match:
-        return True
-    else:   
-        return False   
-    
+
 def parse_watch_history(soup):
     '''takes a parsed tree of watch history (wh) from beautiful soup and returns a simple df with the relevant data'''
-    # use search function to prune away ads from watch history! 
-    # use another search function to get each 'block' from the tree (in the html each block is a )
-    # hver yderste blok har klassen 'outer-cell mdl-cell mdl-cell--12-col mdl-shadow--2dp'. 
+    # hver yderste blok har klassen 'outer-cell mdl-cell mdl-cell--12-col mdl-shadow--2dp' - Her henter vi dem alle sammen
     blocks = soup.find_all(class_ = 'outer-cell mdl-cell mdl-cell--12-col mdl-shadow--2dp')
-    # print(type(blocks), blocks)
-    ads = soup.find_all(is_an_ad)
-    print(len(ads), ads)
-    return ads
-    # for block in blocks:
-    #     if 'From Google Ads' in block:
-    #         print(block)
-    # return blocks
+    blocks_cleaned = [block for block in blocks if is_a_video(block)]
+    print(f'{len(blocks)} entries - {len(blocks_cleaned)} after cleaning. {len(blocks) - len(blocks_cleaned)} ads removed!')
+    return blocks_cleaned
+
 
 watch_history = parse_html('Rådata/Takeout/YouTube and YouTube Music/history/watch-history.html')
 
