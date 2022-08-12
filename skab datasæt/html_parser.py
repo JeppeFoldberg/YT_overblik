@@ -29,11 +29,12 @@ def parse_html(path):
 
 def is_a_video(tag): 
     '''
-    Filter to remove ads
+    Filter to remove ads and videos that still ex
     takes a block of html code and returns a boolean with whether this is an ad or not
     '''
-    return not(bool(re.search('From Google Ads', tag.get_text())))
-    
+    not_an_ad = not(bool(re.search('From Google Ads', tag.get_text())))
+    not_deleted = len(tag.find_all('a')) > 2
+    return (not_an_ad & not_deleted)   
 
 def parse_watch_history(soup):
     '''takes a parsed tree of watch history (wh) from beautiful soup and returns a simple df with the relevant data'''
