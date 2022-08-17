@@ -2,6 +2,7 @@ from functools import wraps
 import time
 from bs4 import BeautifulSoup as bs
 import re
+from dateutil.parser import parse
 import pandas as pd
 
 def timeit(func):
@@ -45,11 +46,65 @@ def parse_watch_history(soup):
     return blocks_cleaned
 
 
+
+
+def make_df(blocks):
+    '''
+    takes in the blocks of watch history and parses them to create the dataframe with all of their data
+    '''
+    video_titles = []
+    video_links = []
+    channel_titles = []
+    channel_links = []
+    date_watched = []
+
+    # i = 0 # debugging! 
+    for block in watch_history_blocks:
+        links = block.find_all('a')
+        
+        video_titles.append(links[0].text)
+        video_links.append(links[0]['href'])
+        channel_title = links[1].text # get channel title for date search! 
+        channel_titles.append(channel_title)
+        channel_links.append(links[1]['href'])
+
+        # Useful for debugging
+        # i += 1
+        # print(f'{len(links)} links; entry {i} with title {links[0].text}')
+
+        # find out if text has the weird watched at text so we can avoid it! 
+        watched_at = re.search(r'Watched at \d\d:\d\d', block.text) 
+        channel_title = re.escape(channel_title) # escape so we avoid problems with channel titles full of weird characters! 
+
+        if watched_at:
+            search_string = fr'{channel_title}{watched_at.group()}(\d?\d \w{{3,4}} \d{{4}}, \d{{2}}:\d{{2}}:\d{{2}}[^P]*)'  
+        else:
+            search_string = fr'{channel_title}(\d?\d \w{{3,4}} \d{{4}}, \d{{2}}:\d{{2}}:\d{{2}}[^P]*)' 
+
+        date_string = re.search(search_string, block.text)
+
+        if watched_at:
+            date_watched.append(parse(date_string.group(1)))
+        else:
+            date_watched.append(parse(date_string.group(1)))
+    
+    return(
+        pd.DataFrame({
+            'video_title' : video_titles,
+            'video_link' : video_links,
+            'channel_title' : channel_titles,
+            'channel_link' : channel_links,
+            'date_watched' : date_watched
+    }))
+
+
 watch_history = parse_html('Rådata/Takeout/YouTube and YouTube Music/history/watch-history.html')
 
 watch_history_blocks = parse_watch_history(watch_history)
 
-# print(watch_history_blocks[:4])
+df = make_df(watch_history_blocks)
+     
+df.to_csv('Renset data/watch_history_df.csv')
 
 # notes:
 # remember to turn strings into unicode before storing them! 
