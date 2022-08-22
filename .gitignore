@@ -1,3 +1,4 @@
 /Rådata
 .DS_Store
 *.csv
+credentials.json

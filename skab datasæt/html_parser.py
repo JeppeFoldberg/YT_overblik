@@ -45,15 +45,12 @@ def parse_watch_history(soup):
     print(f'{len(blocks)} entries - {len(blocks_cleaned)} after cleaning. {len(blocks) - len(blocks_cleaned)} ads removed!')
     return blocks_cleaned
 
-
-
-
 def make_df(blocks):
     '''
     takes in the blocks of watch history and parses them to create the dataframe with all of their data
     '''
     video_titles = []
-    video_links = []
+    video_id = []
     channel_titles = []
     channel_links = []
     date_watched = []
@@ -63,7 +60,7 @@ def make_df(blocks):
         links = block.find_all('a')
         
         video_titles.append(links[0].text)
-        video_links.append(links[0]['href'])
+        video_id.append(re.search(r'https://www.youtube.com/watch\?v=(.*)', links[0]['href']).group(1))
         channel_title = links[1].text # get channel title for date search! 
         channel_titles.append(channel_title)
         channel_links.append(links[1]['href'])
@@ -83,28 +80,29 @@ def make_df(blocks):
 
         date_string = re.search(search_string, block.text)
 
-        if watched_at:
-            date_watched.append(parse(date_string.group(1)))
-        else:
-            date_watched.append(parse(date_string.group(1)))
+        date_watched.append(parse(date_string.group(1)))
+        # if watched_at:
+        #     date_watched.append(parse(date_string.group(1)))
+        # else:
+        #     date_watched.append(parse(date_string.group(1)))
     
     return(
         pd.DataFrame({
             'video_title' : video_titles,
-            'video_link' : video_links,
+            'video_link' : video_id,
             'channel_title' : channel_titles,
             'channel_link' : channel_links,
             'date_watched' : date_watched
     }))
 
+if __name__ == '__main__':
+    watch_history = parse_html('Rådata/Takeout/YouTube and YouTube Music/history/watch-history.html')
 
-watch_history = parse_html('Rådata/Takeout/YouTube and YouTube Music/history/watch-history.html')
+    watch_history_blocks = parse_watch_history(watch_history)
 
-watch_history_blocks = parse_watch_history(watch_history)
-
-df = make_df(watch_history_blocks)
-     
-df.to_csv('Renset data/watch_history_df.csv')
+    df = make_df(watch_history_blocks)
+        
+    df.to_csv('Renset data/watch_history_df.csv')
 
 # notes:
 # remember to turn strings into unicode before storing them! 
