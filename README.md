@@ -12,3 +12,9 @@ conda list --export > package-list.txt
 # nytilkomne kan lave deres eget conda environment og installere alt sådan her:
 conda create -n myenv --file package-list.txt
 ```
+
+TODO 
+- [ ] Find ud af at hente id på det mest relevante caption-track
+- [ ] Download det mest relevante caption track
+- [ ] Forsøg med hSBM til inddeling af videoer
+- [ ] Find ud af hvad der så skal ske :tada: 

@@ -89,7 +89,7 @@ def make_df(blocks):
     return(
         pd.DataFrame({
             'video_title' : video_titles,
-            'video_link' : video_id,
+            'video_id' : video_id,
             'channel_title' : channel_titles,
             'channel_link' : channel_links,
             'date_watched' : date_watched
