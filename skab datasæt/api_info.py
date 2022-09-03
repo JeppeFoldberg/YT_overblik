@@ -52,12 +52,14 @@ def get_video_info(authenticated_service, id, credential_paths):
         print(e)
         if e.error_details[0]['reason'] == 'quotaExceeded':
             try:
-                creds = credential_paths.pop()
+                # close the current connection
+                youtube.close()
 
+                # get a new set of credentials and try to activate it! 
+                creds = credential_paths.pop()
                 youtube = get_authenticated_service(creds)
 
-                print(
-                    f'Having trouble with {id=}, trying credential {current_credential}')
+                print(f'Having trouble with {id=}, trying credential {current_credential}')
                 get_video_info(youtube, id, credential_paths)
 
             except IndexError:
