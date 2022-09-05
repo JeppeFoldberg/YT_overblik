@@ -14,8 +14,6 @@ conda create -n myenv --file package-list.txt
 ```
 
 TODO 
-- [X] Find ud af at hente id på det mest relevante caption-track
-- [ ] Hent video beskrivelsen via api
-- [ ] Download det mest relevante caption track
+- [X] Hent video beskrivelsen via api
 - [ ] Forsøg med hSBM til inddeling af videoer
 - [ ] Find ud af hvad der så skal ske :tada: 
