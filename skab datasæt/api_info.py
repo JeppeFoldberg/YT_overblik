@@ -67,8 +67,7 @@ def get_video_info(authenticated_service, id, credential_paths):
                                                                                                                'credentials/credentials5.json',
                                                                                                                'credentials/credentials6.json'])
         else:
-            print(e)
-            raise KeyError
+            raise e
 
     finally:
         return response, credential_paths, authenticated_service
