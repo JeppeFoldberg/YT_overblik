@@ -3,3 +3,5 @@
 *.csv
 *.json
 hSBM\ overblik/hSBM_Topicmodel
+*.gif
+.ipynb_checkpoints
