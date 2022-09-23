@@ -1,4 +1,5 @@
 # new imports!
+from urllib import response
 import googleapiclient.discovery
 import google_auth_oauthlib.flow
 import sys
@@ -33,13 +34,13 @@ def get_video_info(authenticated_service, id, credential_paths):
     Takes an authenticated service and a video id
     '''
     request = authenticated_service.videos().list(
-        part='snippet',
+        part='snippet,topicDetails',
         id=id,
         fields='items(snippet(description)),items(snippet(thumbnails(high(url)))),\
-        items(snippet(publishedAt)),items(snippet(tags))items(snippet(channelId))'
+        items(snippet(publishedAt)),items(snippet(tags))items(snippet(channelId)),\
+        items(topicDetails(topicCategories))'
     )
 
-    # response = {'items': []}
     try:
         response = request.execute()
 
@@ -78,20 +79,32 @@ def parse_video_response(response):
     retrieves video info from a response object
     returns them individually. 
     '''
-    response = response['items'][0]['snippet']  # gets only the snippet dict!
-    description = response.get('description', pd.NA)
-    channel_id = response.get('channelId', pd.NA)
-    published_at = response.get('publishedAt', pd.NA)
-    thumbnail = response.get(
+    snippet = response['items'][0]['snippet']  # gets only the snippet dict!
+    topic_details = response['items'][0].get('topicDetails', pd.NA)
+
+    description = snippet.get('description', pd.NA)
+    channel_id = snippet.get('channelId', pd.NA)
+    published_at = snippet.get('publishedAt', pd.NA)
+    thumbnail = snippet.get(
         'thumbnails', pd.NA
     ).get(
         'high', pd.NA
     ).get(
         'url', pd.NA
     )
-    tag = response.get('tags', pd.NA)
 
-    return description, channel_id, published_at, thumbnail, tag
+    tag = snippet.get('tags', [])
+    if tag:
+        tag = ','.join(tag)
+    else:
+        tag = pd.NA
+
+    if pd.isna(topic_details):
+        topic_categories = pd.NA
+    else:
+        topic_categories = topic_details.get('topicCategories', pd.NA)
+
+    return description, channel_id, published_at, thumbnail, tag, topic_categories
 
 
 def main():
@@ -100,6 +113,7 @@ def main():
     descriptions = []
     thumbnails = []
     tags = []
+    topic_categories = []
     removed_videos_ids = []
 
     credentials = [
@@ -112,27 +126,28 @@ def main():
     ]
 
     if len(sys.argv) < 1:
-        raise SystemExit(f"Usage: {sys.argv[0]} <path_to_df>")
+        raise SystemExit(f"Usage: {sys.argv[0]} <path_to_df> <path_to_enriched_df>")
 
     path_to_df = sys.argv[1]
+    path_to_enriched_df = sys.argv[2]
 
     df = pd.read_csv(path_to_df, index_col=0)
 
-# TODO: ændre det her 1 til et 0 når authentication virker!
-    authenticated_service = get_authenticated_service(credentials[1])
+    authenticated_service = get_authenticated_service(credentials[0])
 
     for i, id in enumerate(df.video_id):
         response, credentials, authenticated_service = get_video_info(
             authenticated_service, id, credentials)
 
         if response['items']:
-            description, channel_id, published, thumbnail, tag = parse_video_response(
+            description, channel_id, published, thumbnail, tag, topic_category = parse_video_response(
                 response)
             channel_ids.append(channel_id)
             published_at.append(published)
             descriptions.append(description)
             thumbnails.append(thumbnail)
             tags.append(tag)
+            topic_categories.append(topic_category)
         else:
             removed_videos_ids.append(id)
             print(
@@ -146,10 +161,10 @@ def main():
         published_date=published_at,
         description=descriptions,
         thumbnail=thumbnails,
-        tag=tags
-
+        tag=tags,
+        topic_category = topic_categories
     )
-    full_df.to_csv('Renset data/history_w_videoinfo.csv')
+    full_df.to_csv(path_to_enriched_df)
 
 
 if __name__ == "__main__":
