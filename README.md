@@ -14,6 +14,6 @@ conda create -n myenv --file package-list.txt
 ```
 
 TODO 
-- [X] Hent video beskrivelsen via api
-- [ ] Forsøg med hSBM til inddeling af videoer
+- [ ] Hent længde af videoer og kategori id (og en liste over kategorier indenfor personens land!)
+- [ ] Lav et plot over kategoriers andele over tid! 
 - [ ] Find ud af hvad der så skal ske :tada: 

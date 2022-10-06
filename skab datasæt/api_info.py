@@ -38,7 +38,7 @@ def get_video_info(authenticated_service, id, credential_paths):
         id=id,
         fields='items(snippet(description)),items(snippet(thumbnails(high(url)))),\
         items(snippet(publishedAt)),items(snippet(tags))items(snippet(channelId)),\
-        items(topicDetails(topicCategories))'
+        items(topicDetails(topicCategories)),items(snippet(categoryId))'
     )
 
     try:
@@ -82,6 +82,7 @@ def parse_video_response(response):
     snippet = response['items'][0]['snippet']  # gets only the snippet dict!
     topic_details = response['items'][0].get('topicDetails', pd.NA)
 
+    category_id = snippet.get('categoryId', pd.NA)
     description = snippet.get('description', pd.NA)
     channel_id = snippet.get('channelId', pd.NA)
     published_at = snippet.get('publishedAt', pd.NA)
@@ -104,7 +105,7 @@ def parse_video_response(response):
     else:
         topic_categories = topic_details.get('topicCategories', pd.NA)
 
-    return description, channel_id, published_at, thumbnail, tag, topic_categories
+    return description, channel_id, published_at, thumbnail, tag, topic_categories, category_id
 
 
 def main():
@@ -114,6 +115,7 @@ def main():
     thumbnails = []
     tags = []
     topic_categories = []
+    category_ids = []
     removed_videos_ids = []
 
     credentials = [
@@ -125,7 +127,7 @@ def main():
         'credentials/credentials6.json'
     ]
 
-    if len(sys.argv) < 1:
+    if len(sys.argv) < 2:
         raise SystemExit(f"Usage: {sys.argv[0]} <path_to_df> <path_to_enriched_df>")
 
     path_to_df = sys.argv[1]
@@ -140,7 +142,7 @@ def main():
             authenticated_service, id, credentials)
 
         if response['items']:
-            description, channel_id, published, thumbnail, tag, topic_category = parse_video_response(
+            description, channel_id, published, thumbnail, tag, topic_category, category_id = parse_video_response(
                 response)
             channel_ids.append(channel_id)
             published_at.append(published)
@@ -148,6 +150,7 @@ def main():
             thumbnails.append(thumbnail)
             tags.append(tag)
             topic_categories.append(topic_category)
+            category_ids.append(category_id)
         else:
             removed_videos_ids.append(id)
             print(
@@ -162,7 +165,8 @@ def main():
         description=descriptions,
         thumbnail=thumbnails,
         tag=tags,
-        topic_category = topic_categories
+        topic_category = topic_categories,
+        category_id = category_ids
     )
     full_df.to_csv(path_to_enriched_df)
 
