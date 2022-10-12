@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup as bs
 import re
 from dateutil.parser import parse
 import pandas as pd
+import sys
 
 def timeit(func):
     @wraps(func)
@@ -18,7 +19,7 @@ def timeit(func):
     return timeit_wrapper
 
 
-@timeit
+# @timeit
 def parse_html(path): 
     with open(path) as f:
         # read file
@@ -56,7 +57,7 @@ def make_df(blocks):
     date_watched = []
 
     # i = 0 # debugging! 
-    for block in watch_history_blocks:
+    for block in blocks:
         links = block.find_all('a')
         
         video_titles.append(links[0].text)
@@ -95,15 +96,22 @@ def make_df(blocks):
             'date_watched' : date_watched
     }))
 
-if __name__ == '__main__':
-    watch_history = parse_html('Rådata/Takeout/YouTube and YouTube Music/history/watch-history.html')
+def main():
+    path_to_html = sys.argv[1]
+    path_to_watch_history_df = sys.argv[2]
+
+    watch_history = parse_html(path_to_html)
 
     watch_history_blocks = parse_watch_history(watch_history)
 
     df = make_df(watch_history_blocks)
         
-    df.to_csv('Renset data/watch_history_df.csv')
+    df.to_csv(path_to_watch_history_df)
 
+
+if __name__ == '__main__':
+    main()
+    
 # notes:
 # remember to turn strings into unicode before storing them! 
 # If you want to use a NavigableString outside of Beautiful Soup, you should call unicode() on it to turn it into a normal Python Unicode string. 

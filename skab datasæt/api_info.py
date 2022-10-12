@@ -4,6 +4,7 @@ import googleapiclient.discovery
 import google_auth_oauthlib.flow
 import sys
 import pandas as pd
+import subprocess.call as call 
 
 
 def get_authenticated_service(credential_path):
@@ -20,6 +21,8 @@ def get_authenticated_service(credential_path):
     # API client
     flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
         client_secrets_file, scopes)
+
+    call['say', 'Autencificer mig']
 
     credentials = flow.run_console()
 
