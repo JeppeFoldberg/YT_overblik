@@ -1,4 +1,5 @@
 #%% 
+from venv import create
 import pandas as pd
 # from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
@@ -32,15 +33,33 @@ def create_cooc_matrix(df):
 
     return df
 
+#%%
+def create_yearly_plots(df):
+    df['date_watched'] = pd.to_datetime(df['date_watched'], utc=True)
+    df['year_watched'] = df['date_watched'].dt.year 
+    years = df.year_watched.unique()
+
+    yearly_dfs = {}
+    for year in years:
+        year_df = df[df.year_watched == year]
+        year_cooc = create_cooc_matrix(year_df)
+
+        yearly_dfs[str(year)] = year_cooc
+
+    return yearly_dfs
+
 # %%
 def main():
     path_to_watch_history = sys.argv[1]   
-    path_to_networkfolder = sys.argv[2]   
+    path_to_network_folder = sys.argv[2]   
 
     df = pd.read_csv(path_to_watch_history, index_col=0)
 
-    cooc_matrix = create_cooc_matrix(df)
-
-    df.to_csv(f'{path_to_network_folder}/cooc_matrix.csv', sep = ',')
+    # cooc_matrix = create_cooc_matrix(df)
+    yearly_dfs = create_yearly_plots(df)
+    for key, value in yearly_dfs.items():
+        value.to_csv(f'{path_to_network_folder}/{key}.csv', sep = ',')
 
 # %%
+if __name__ == "__main__":
+    main()

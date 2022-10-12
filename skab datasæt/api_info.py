@@ -4,7 +4,7 @@ import googleapiclient.discovery
 import google_auth_oauthlib.flow
 import sys
 import pandas as pd
-import subprocess.call as call 
+from subprocess import call
 
 
 def get_authenticated_service(credential_path):
