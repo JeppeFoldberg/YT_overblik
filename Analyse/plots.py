@@ -3,8 +3,9 @@ from base64 import decode
 from operator import index
 import pandas as pd
 import bar_chart_race as bcr
+import sys
 # %%
-df = pd.read_csv('../Renset data/history_w_videoinfo.csv', index_col=0)
+# df = pd.read_csv('../Renset data/history_w_videoinfo.csv', index_col=0)
 
 #%% 
 def reshape_data(df): 
@@ -47,45 +48,53 @@ def create_bcr(df, filename, n_bars = 15, period_length = 100, **kwargs):
     bcr.bar_chart_race(df=df, filename=filename, n_bars=n_bars, filter_column_colors = True, period_length=period_length, **kwargs)
 
 #%%
-df = pd.read_csv('../Renset data/history_w_videoinfo.csv', index_col=0)
-df = reshape_data(df)
-create_bcr(df, "test_bcr_function.gif")
+def main():
+    print(sys.argv)
+    path_to_df = sys.argv[1]
+    path_to_gif_output = sys.argv[2]
 
+    df = pd.read_csv(path_to_df, index_col=0)
+# df = pd.read_csv('../Renset data/history_w_videoinfo.csv', index_col=0)
+    df = reshape_data(df)
+    create_bcr(df, path_to_gif_output)
+
+if __name__ == '__main__':
+    main()
 #%%
-df['datetime'] = pd.to_datetime(df['date_watched'], utc=True)
-df['day_watched'] = df['datetime'].dt.date
+# df['datetime'] = pd.to_datetime(df['date_watched'], utc=True)
+# df['day_watched'] = df['datetime'].dt.date
 
-# Clean channel title so it can be written by bcr
+# # Clean channel title so it can be written by bcr
 
 
-df['channel_title_cat'] = df['channel_title'].astype('category')
+# df['channel_title_cat'] = df['channel_title'].astype('category')
 
-# group by day watched and channel title and count daily viewed videos on the channel
-temp = df.groupby(['day_watched', 'channel_title'], as_index=False)['video_title'].nunique()
+# # group by day watched and channel title and count daily viewed videos on the channel
+# temp = df.groupby(['day_watched', 'channel_title'], as_index=False)['video_title'].nunique()
 
-# pivot wider so we can see the daily views on all channels in a single row
-temp2 = temp.pivot(index='day_watched', columns='channel_title', values='video_title')
+# # pivot wider so we can see the daily views on all channels in a single row
+# temp2 = temp.pivot(index='day_watched', columns='channel_title', values='video_title')
 
-# remove channels with less than n views. 
-temp2 = temp2[temp2.columns[temp2.sum()>10]]
+# # remove channels with less than n views. 
+# temp2 = temp2[temp2.columns[temp2.sum()>10]]
 
-# replace nans with 0
-temp2 = temp2.fillna(0)
+# # replace nans with 0
+# temp2 = temp2.fillna(0)
 
-# aggregate sums for each 
-temp2 = temp2.cumsum()
+# # aggregate sums for each 
+# temp2 = temp2.cumsum()
 
-# %%
-pd.to_datetime(df['date_watched'], utc = True)
-# df.datetime
-# %%
-df.groupby(['datetime', 'channel_title']).count()
-# %%
-df.groupby(['datetime.floor("W")', 'channel_title']).sum()
+# # %%
+# pd.to_datetime(df['date_watched'], utc = True)
+# # df.datetime
+# # %%
+# df.groupby(['datetime', 'channel_title']).count()
+# # %%
+# df.groupby(['datetime.floor("W")', 'channel_title']).sum()
 
-# %%
-bcr.bar_chart_race(df=temp2, filename="bcr_test2.gif", n_bars=15, filter_column_colors = True, period_length=100)
-# %%
-# how to clean strings... 
-strings = df.channel_title.str
+# # %%
+# bcr.bar_chart_race(df=temp2, filename="bcr_test2.gif", n_bars=15, filter_column_colors = True, period_length=100)
+# # %%
+# # how to clean strings... 
+# strings = df.channel_title.str
 
