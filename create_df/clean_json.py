@@ -3,7 +3,7 @@ import pandas as pd
 import re
 from dateutil.parser import parse
 # %%
-df = pd.read_json('watch-history.json')
+df = pd.read_json('../raw_data/01/watch-history.json')
 #%% 
 df = df[pd.isna(df.details)] # removing ads! 
 # %%
@@ -28,9 +28,10 @@ df = df.dropna(subset='subtitles')
 
 df['channel_title'] = [info[0]['name'] for info in df.subtitles]
 df['channel_link'] = [info[0]['url'] for info in df.subtitles]
-# select the columns cleaned above! 
 
 # %%
-
-df.subtitles[0]
+# select the columns cleaned above! 
+temp = df[['video_title', 'video_id', 'channel_title', 'channel_link', 'date_watched']]
+# %%
+df.to_csv('../cleaned_data/01/history_df.csv')
 # %%
