@@ -31,7 +31,7 @@ df['channel_link'] = [info[0]['url'] for info in df.subtitles]
 
 # %%
 # select the columns cleaned above! 
-temp = df[['video_title', 'video_id', 'channel_title', 'channel_link', 'date_watched']]
+df = df[['video_title', 'video_id', 'channel_title', 'channel_link', 'date_watched']]
 # %%
 df.to_csv('../cleaned_data/01/history_df.csv')
 # %%
