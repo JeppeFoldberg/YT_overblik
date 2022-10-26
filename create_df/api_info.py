@@ -22,7 +22,7 @@ def get_authenticated_service(credential_path):
     flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
         client_secrets_file, scopes)
 
-    call['say', 'Autencificer mig']
+    call(['say', 'Autencificer mig'])
 
     credentials = flow.run_console()
 
