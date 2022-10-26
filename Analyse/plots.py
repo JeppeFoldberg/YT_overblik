@@ -54,7 +54,6 @@ def main():
     path_to_gif_output = sys.argv[2]
 
     df = pd.read_csv(path_to_df, index_col=0)
-# df = pd.read_csv('../Renset data/history_w_videoinfo.csv', index_col=0)
     df = reshape_data(df)
     create_bcr(df, path_to_gif_output)
 
