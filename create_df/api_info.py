@@ -131,12 +131,13 @@ def main():
     ]
 
     if len(sys.argv) < 2:
-        raise SystemExit(f"Usage: {sys.argv[0]} <path_to_df> <path_to_enriched_df>")
+        raise SystemExit(f"Usage: {sys.argv[0]} <respondent_number>")
 
-    path_to_df = sys.argv[1]
-    path_to_enriched_df = sys.argv[2]
+    respondent = sys.argv[1]
+    # path_to_df = sys.argv[1]
+    # path_to_enriched_df = sys.argv[2]
 
-    df = pd.read_csv(path_to_df, index_col=0)
+    df = pd.read_csv(f'cleaned_data/{respondent}/history_df.csv', index_col=0)
 
     authenticated_service = get_authenticated_service(credentials[0])
 
@@ -171,7 +172,7 @@ def main():
         topic_category = topic_categories,
         category_id = category_ids
     )
-    full_df.to_csv(path_to_enriched_df)
+    full_df.to_csv(f'cleaned_data/{respondent}/history_info_df.csv')
 
 
 if __name__ == "__main__":

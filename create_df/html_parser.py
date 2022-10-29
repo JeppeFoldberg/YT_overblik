@@ -81,16 +81,17 @@ def make_df(blocks):
     }))
 
 def main():
-    path_to_html = sys.argv[1]
-    path_to_watch_history_df = sys.argv[2]
+    # path_to_html = sys.argv[1]
+    # path_to_watch_history_df = sys.argv[2]
+    respondent = sys.argv[1]
 
-    watch_history = parse_html(path_to_html)
+    watch_history = parse_html(f'raw_data/{respondent}/watch-history.html')
 
     watch_history_blocks = parse_watch_history(watch_history)
 
     df = make_df(watch_history_blocks)
         
-    df.to_csv(path_to_watch_history_df)
+    df.to_csv(f'cleaned_data/{respondent}/history_df.csv')
 
 
 if __name__ == '__main__':
