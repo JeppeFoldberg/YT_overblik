@@ -1,5 +1,5 @@
 #%% 
-from venv import create
+# from venv import create
 import pandas as pd
 # from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
@@ -20,7 +20,8 @@ def create_cooc_matrix(df):
     tag_lists = df.tag[~pd.isna(df.tag) == True]
     no_tags = df.shape[0]-tag_lists.shape[0]
     pct_no_tags = no_tags / df.shape[0] * 100
-    print(f'{no_tags} videos did not have tags. This amounts to {pct_no_tags:.2f}%')
+    year = df.reset_index().loc[0, 'year_watched']
+    print(f'{no_tags} videos did not have tags in {year}. This amounts to {pct_no_tags:.2f}%')
     # splits on ',' because we trust the tokens used by creators! 
     cv = CountVectorizer(token_pattern=r'[^,]*', min_df=0.01, max_df=0.95) # Maybe set min and max df to minimize the size of the network! could be max_df = 0.95, min_df = 0.4
 
@@ -49,16 +50,32 @@ def create_yearly_plots(df):
     return yearly_dfs
 
 # %%
-def main():
-    path_to_watch_history = sys.argv[1]   
-    path_to_network_folder = sys.argv[2]   
+def create_plots_for_period(df, period):
+    df['date_watched'] = pd.to_datetime(df['date_watched'], utc=True)
+    df['period_watched'] = df['date_watched'].dt.floor(period)
+    years = df.period_watched.unique()
 
-    df = pd.read_csv(path_to_watch_history, index_col=0)
+    yearly_dfs = {}
+    for year in years:
+        year_df = df[df.year_watched == year]
+        year_cooc = create_cooc_matrix(year_df)
+
+        yearly_dfs[str(year)] = year_cooc
+
+    return yearly_dfs
+
+#%% 
+def main():
+    # path_to_watch_history = sys.argv[1]   
+    # path_to_network_folder = sys.argv[2]   
+    respondent = sys.argv[1]
+
+    df = pd.read_csv(f'cleaned_data/{respondent}/history_info_df.csv', index_col=0)
 
     # cooc_matrix = create_cooc_matrix(df)
     yearly_dfs = create_yearly_plots(df)
     for key, value in yearly_dfs.items():
-        value.to_csv(f'{path_to_network_folder}/{key}.csv', sep = ',')
+        value.to_csv(f'cleaned_data/{respondent}/{key}.csv', sep = ',')
 
 # %%
 if __name__ == "__main__":

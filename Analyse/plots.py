@@ -49,13 +49,13 @@ def create_bcr(df, filename, n_bars = 15, period_length = 100, **kwargs):
 
 #%%
 def main():
-    print(sys.argv)
-    path_to_df = sys.argv[1]
-    path_to_gif_output = sys.argv[2]
+    # path_to_df = sys.argv[1]
+    # path_to_gif_output = sys.argv[2]
+    respondent = sys.argv[1]
 
-    df = pd.read_csv(path_to_df, index_col=0)
+    df = pd.read_csv(f'cleaned_data/{respondent}/history_info_df.csv', index_col=0)
     df = reshape_data(df)
-    create_bcr(df, path_to_gif_output)
+    create_bcr(df, f'results/{respondent}/bcr.gif')
 
 if __name__ == '__main__':
     main()
