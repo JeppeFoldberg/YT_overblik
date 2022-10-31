@@ -3,6 +3,8 @@ import re
 from dateutil.parser import parse
 import pandas as pd
 import sys
+from datetime import datetime, date
+import locale
 
 def parse_html(path): 
     with open(path) as f:
@@ -13,24 +15,29 @@ def parse_html(path):
 
     return soup
 
-def is_a_video(tag): 
+def is_a_video(tag, da=False): 
     '''
     Filter to remove ads and videos that still ex
     takes a block of html code and returns a boolean with whether this is an ad or not
     '''
-    not_an_ad = not(bool(re.search('From Google Ads', tag.get_text())))
+    if da:
+        not_an_ad = not(bool(re.search('Fra Google Annoncer', tag.get_text())))
+    else:
+        not_an_ad = not(bool(re.search('From Google Ads', tag.get_text())))
+
     not_deleted = len(tag.find_all('a')) > 2
+    
     return (not_an_ad & not_deleted)   
 
-def parse_watch_history(soup):
+def parse_watch_history(soup, da = False):
     '''takes a parsed tree of watch history (wh) from beautiful soup and returns a simple df with the relevant data'''
     # hver yderste blok har klassen 'outer-cell mdl-cell mdl-cell--12-col mdl-shadow--2dp' - Her henter vi dem alle sammen
     blocks = soup.find_all(class_ = 'outer-cell mdl-cell mdl-cell--12-col mdl-shadow--2dp')
-    blocks_cleaned = [block for block in blocks if is_a_video(block)]
+    blocks_cleaned = [block for block in blocks if is_a_video(block, da)]
     print(f'{len(blocks)} entries - {len(blocks_cleaned)} after cleaning. {len(blocks) - len(blocks_cleaned)} ads removed!')
     return blocks_cleaned
 
-def make_df(blocks):
+def make_df(blocks, da=False):
     '''
     takes in the blocks of watch history and parses them to create the dataframe with all of their data
     '''
@@ -50,46 +57,78 @@ def make_df(blocks):
         channel_titles.append(channel_title)
         channel_links.append(links[1]['href'])
 
+
+        temp = block.text
         # Useful for debugging
         # i += 1
         # print(f'{len(links)} links; entry {i} with title {links[0].text}')
 
-        # find out if text has the weird watched at text so we can avoid it! 
-        watched_at = re.search(r'Watched at \d\d:\d\d', block.text) 
-        channel_title = re.escape(channel_title) # escape so we avoid problems with channel titles full of weird characters! 
+        if da: 
+             # find out if text has the weird watched at text so we can avoid it! 
+            watched_at = re.search(r'Set \d\d:\d\d', block.text) 
+            channel_title = re.escape(channel_title) # escape so we avoid problems with channel titles full of weird characters! 
 
-        if watched_at:
-            search_string = fr'{channel_title}{watched_at.group()}(\d?\d \w{{3,4}} \d{{4}}, \d{{2}}:\d{{2}}:\d{{2}}[^P]*)'  
+            if watched_at:
+                search_string = fr'{channel_title}{watched_at.group()}(\d?\d\.? \w{{3,4}}\.? \d{{4}} \d{{2}}\.\d{{2}}\.?\d{{2}}[^P]*)'  
+            else:
+                search_string = fr'{channel_title}(\d?\d\.? \w{{3,4}}\.? \d{{4}} \d{{2}}\.\d{{2}}\.\d{{2}}[^P]*)' 
+
+            date_string = re.search(search_string, block.text)
+            # remaking date string into a format that can be parsed! 
+            date_string = date_string.group(1).replace('.', ':').replace(':', '', 2)
+
+            replacements = {
+                'jan': 'January', 
+                'feb': 'February', 
+                'mar': 'March', 
+                'apr': 'April', 
+                'may': 'May', 
+                'jun': 'June', 
+                'jul': 'July', 
+                'aug': 'August', 
+                'sep': 'September', 
+                'okt': 'October', 
+                'nov': 'November', 
+                'dec': 'December'
+                }
+            for short, long in replacements.items():
+                date_string = date_string.replace(short.lower(), long)
+
+            date_watched.append(parse(date_string))
+
         else:
-            search_string = fr'{channel_title}(\d?\d \w{{3,4}} \d{{4}}, \d{{2}}:\d{{2}}:\d{{2}}[^P]*)' 
+            # find out if text has the weird watched at text so we can avoid it! 
+            watched_at = re.search(r'Watched at \d\d:\d\d', block.text) 
+            channel_title = re.escape(channel_title) # escape so we avoid problems with channel titles full of weird characters! 
 
-        date_string = re.search(search_string, block.text)
+            if watched_at:
+                search_string = fr'{channel_title}{watched_at.group()}(\d?\d \w{{3,4}} \d{{4}}, \d{{2}}:\d{{2}}:\d{{2}}[^P]*)'  
+            else:
+                search_string = fr'{channel_title}(\d?\d \w{{3,4}} \d{{4}}, \d{{2}}:\d{{2}}:\d{{2}}[^P]*)' 
 
-        date_watched.append(parse(date_string.group(1)))
-        # if watched_at:
-        #     date_watched.append(parse(date_string.group(1)))
-        # else:
-        #     date_watched.append(parse(date_string.group(1)))
-    
+            date_string = re.search(search_string, block.text)
+
+            date_watched.append(parse(date_string.group(1)))
+
+
     return(
-        pd.DataFrame({
-            'video_title' : video_titles,
-            'video_id' : video_id,
-            'channel_title' : channel_titles,
-            'channel_link' : channel_links,
-            'date_watched' : date_watched
+    pd.DataFrame({
+        'video_title' : video_titles,
+        'video_id' : video_id,
+        'channel_title' : channel_titles,
+        'channel_link' : channel_links,
+        'date_watched' : date_watched
     }))
 
 def main():
-    # path_to_html = sys.argv[1]
-    # path_to_watch_history_df = sys.argv[2]
     respondent = sys.argv[1]
+    da = sys.argv[2]
 
     watch_history = parse_html(f'raw_data/{respondent}/watch-history.html')
 
     watch_history_blocks = parse_watch_history(watch_history)
 
-    df = make_df(watch_history_blocks)
+    df = make_df(watch_history_blocks, da)
         
     df.to_csv(f'cleaned_data/{respondent}/history_df.csv')
 
