@@ -14,7 +14,7 @@ import sys
 # tags_list = [[word for word in tag_list if word not in stopwords] for tag_list in tags_list] 
 # print(sys.getsizeof(tags_list))
 #%% 
-def create_cooc_matrix(df, period = False):
+def create_cooc_matrix(df, missing_df, period = False):
     '''takes a df, gets the tags and creates a coocurrence matrix'''
     # way of getting only the rows with actual tags
     tag_lists = df.tag[~pd.isna(df.tag) == True]
@@ -22,10 +22,14 @@ def create_cooc_matrix(df, period = False):
     pct_no_tags = no_tags / df.shape[0] * 100
     if period: 
         period = df.reset_index().loc[0, 'period_watched']
-        print(f'{no_tags} videos did not have tags in {period}. This amounts to {pct_no_tags:.2f}%')
     else:
-        year = df.reset_index().loc[0, 'year_watched']
-        print(f'{no_tags} videos did not have tags in {year}. This amounts to {pct_no_tags:.2f}%')
+        period = df.reset_index().loc[0, 'year_watched']
+
+    print(f'{no_tags} videos did not have tags in {period}. This amounts to {pct_no_tags:.2f}%')
+
+    respondent = sys.argv[1]
+    missing = pd.DataFrame({'respondent': respondent, 'period': period, 'missing_tags_pct': pct_no_tags}, index = [0])
+    missing_df = pd.concat([missing_df, missing], ignore_index=True)
 
     # splits on ',' because we trust the tokens used by creators! 
     cv = CountVectorizer(token_pattern=r'[^,]*', min_df=0.01, max_df=0.95) # Maybe set min and max df to minimize the size of the network! could be max_df = 0.95, min_df = 0.4
@@ -37,60 +41,58 @@ def create_cooc_matrix(df, period = False):
     names = cv.get_feature_names_out()
     df = pd.DataFrame(data = Xc.toarray(), columns = names, index = names)
 
-    return df
+    return df, missing_df
 
 #%%
 def create_yearly_plots(df):
     df['date_watched'] = pd.to_datetime(df['date_watched'], utc=True)
     df['year_watched'] = df['date_watched'].dt.year 
     years = df.year_watched.unique()
-
+    missing_df = pd.DataFrame(columns=['respondent', 'period', 'missing_tags_pct'])
     yearly_dfs = {}
     for year in years:
         year_df = df[df.year_watched == year]
-        year_cooc = create_cooc_matrix(year_df)
+        year_cooc, missing_df = create_cooc_matrix(year_df, missing_df)
 
         yearly_dfs[str(year)] = year_cooc
 
-    return yearly_dfs
+    return yearly_dfs, missing_df
 
 # %%
 def create_period_plots(df, period):
     df['date_watched'] = pd.to_datetime(df['date_watched'], utc=True)
     df['period_watched'] = df.date_watched.dt.to_period(period)
 
-    # df['period_watched'] = df['date_watched'].dt.floor(period)
     periods = df.period_watched.unique()
 
+    missing_df = pd.DataFrame(columns=['respondent', 'period', 'missing_tags_pct'])
     period_dfs = {}
     for period in periods:
         period_df = df[df.period_watched == period]
-        period_cooc = create_cooc_matrix(period_df, period = True)
+        period_cooc, missing_df = create_cooc_matrix(period_df, missing_df, period = True)
 
         period_dfs[str(period)] = period_cooc
 
-    return period_dfs
+    return period_dfs, missing_df
 
 #%% 
 def main():
-    # path_to_watch_history = sys.argv[1]   
-    # path_to_network_folder = sys.argv[2]   
-    respondent = sys.argv[1]
+    respondent_nr = sys.argv[1]
 
-    df = pd.read_csv(f'cleaned_data/{respondent}/history_info_df.csv', index_col=0)
+    df = pd.read_csv(f'cleaned_data/{respondent_nr}/history_info_df.csv', index_col=0)
 
     if len(sys.argv) <= 2:
     # cooc_matrix = create_cooc_matrix(df)
-        yearly_dfs = create_yearly_plots(df)
+        yearly_dfs, missing_df = create_yearly_plots(df)
         for key, value in yearly_dfs.items():
-            value.to_csv(f'cleaned_data/{respondent}/{key}.csv', sep = ',')
+            value.to_csv(f'cleaned_data/{respondent_nr}/{key}.csv', sep = ',')
     elif len(sys.argv) == 3:
         period = sys.argv[2]
-        period_dfs = create_period_plots(df, period)
+        period_dfs, missing_df = create_period_plots(df, period)
         for key, value in period_dfs.items():
-            value.to_csv(f'cleaned_data/{respondent}/{key}.csv', sep = ',')
+            value.to_csv(f'cleaned_data/{respondent_nr}/{key}.csv', sep = ',')
  
+    missing_df.to_csv(f'cleaned_data/{respondent_nr}/missing_tags.csv')
 
-# %%
 if __name__ == "__main__":
     main()
