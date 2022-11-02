@@ -75,21 +75,21 @@ def make_df(blocks, da=False):
 
             date_string = re.search(search_string, block.text)
             # remaking date string into a format that can be parsed! 
-            date_string = date_string.group(1).replace('.', ':').replace(':', '', 2)
+            date_string = date_string.group(1).replace('.', ':').replace(':', '', 1)
 
             replacements = {
-                'jan': 'January', 
-                'feb': 'February', 
-                'mar': 'March', 
-                'apr': 'April', 
-                'may': 'May', 
-                'jun': 'June', 
-                'jul': 'July', 
-                'aug': 'August', 
-                'sep': 'September', 
-                'okt': 'October', 
-                'nov': 'November', 
-                'dec': 'December'
+                'jan:': 'January', 
+                'feb:': 'February', 
+                'mar:': 'March', 
+                'apr:': 'April', 
+                'maj': 'May', 
+                'jun:': 'June', 
+                'jul:': 'July', 
+                'aug:': 'August', 
+                'sep:': 'September', 
+                'okt:': 'October', 
+                'nov:': 'November', 
+                'dec:': 'December'
                 }
             for short, long in replacements.items():
                 date_string = date_string.replace(short.lower(), long)
@@ -124,7 +124,12 @@ def main():
     respondent = sys.argv[1]
     da = sys.argv[2]
 
-    watch_history = parse_html(f'raw_data/{respondent}/watch-history.html')
+    if da: 
+        path = f'raw_data/{respondent}/afspilningshistorik.html'
+    else: 
+        path = f'raw_data/{respondent}/watch-history.html'
+
+    watch_history = parse_html(path)
 
     watch_history_blocks = parse_watch_history(watch_history)
 
