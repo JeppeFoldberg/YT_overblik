@@ -122,7 +122,10 @@ def make_df(blocks, da=False):
 
 def main():
     respondent = sys.argv[1]
-    da = sys.argv[2]
+    if len(sys.argv > 2):
+        da = sys.argv[2]
+    else:
+        da = False
 
     if da: 
         path = f'raw_data/{respondent}/afspilningshistorik.html'
