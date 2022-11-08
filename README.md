@@ -37,6 +37,7 @@ TODO
 - [ ] Find ud af hvad der så skal ske :tada: 
 
 Current directory structure
+```
 .
 ├── Analyse
 │   ├── bcr.py
@@ -99,3 +100,4 @@ Current directory structure
     ├── 08
     ├── 09
     ├── 10
+```
