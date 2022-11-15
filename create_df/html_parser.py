@@ -108,7 +108,13 @@ def make_df(blocks, da=False):
 
             date_string = re.search(search_string, block.text)
 
-            date_watched.append(parse(date_string.group(1)))
+            if date_string:
+                date_watched.append(parse(date_string.group(1)))
+            else:
+                # to catch weird AM/PM format of some watch histories! 
+                search_string = fr'{channel_title}(\w{{3}} \d?\d, \d{{4}}, \d{{1,2}}:\d{{2}}:\d{{2}} [PA]M [^P]*)' 
+                date_string = re.search(search_string, block.text)
+                date_watched.append(parse(date_string.group(1)))
 
 
     return(
@@ -122,7 +128,7 @@ def make_df(blocks, da=False):
 
 def main():
     respondent = sys.argv[1]
-    if len(sys.argv > 2):
+    if len(sys.argv) > 2:
         da = sys.argv[2]
     else:
         da = False
