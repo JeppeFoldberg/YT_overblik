@@ -87,11 +87,20 @@ def main():
         for key, value in yearly_dfs.items():
             value.to_csv(f'cleaned_data/{respondent_nr}/{key}.csv', sep = ',')
     elif len(sys.argv) == 3:
-        period = sys.argv[2]
-        period_dfs, missing_df = create_period_plots(df, period)
-        for key, value in period_dfs.items():
-            value.to_csv(f'cleaned_data/{respondent_nr}/{key}.csv', sep = ',')
- 
+        # if we want a network of all the watch history
+        if sys.argv[2] == 'all':
+            df['date_watched'] = pd.to_datetime(df['date_watched'], utc=True)
+            df['year_watched'] = df['date_watched'].dt.year
+            missing_df = pd.DataFrame(columns=['respondent', 'period', 'missing_tags_pct'])
+            cooc_all, missing_df = create_cooc_matrix(df, missing_df)
+            cooc_all.to_csv(f'cleaned_data/{respondent_nr}/all.csv', sep = ',')
+        else:
+            # if we want specific periodic networks! 
+            period = sys.argv[2]
+            period_dfs, missing_df = create_period_plots(df, period)
+            for key, value in period_dfs.items():
+                value.to_csv(f'cleaned_data/{respondent_nr}/{key}.csv', sep = ',')
+    
     missing_df.to_csv(f'cleaned_data/{respondent_nr}/missing_tags.csv')
 
 if __name__ == "__main__":
