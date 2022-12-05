@@ -143,6 +143,8 @@ def main():
     watch_history_blocks = parse_watch_history(watch_history)
 
     df = make_df(watch_history_blocks, da)
+
+    print(df.shape)
         
     df.to_csv(f'cleaned_data/{respondent}/history_df.csv')
 
